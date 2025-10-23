@@ -316,13 +316,9 @@ server {
     #     return 301 https://\$server_name\$request_uri;
     # }
 
-    # Temporary: Serve basic page until SSL is configured
+    # Matrix landing page (public access - has its own UI)
     location / {
-        # Global authentication
-        auth_basic "Core Server";
-        auth_basic_user_file ${DEPLOYMENT_CONFIG}/users.htpasswd;
-
-        root /var/www/html;
+        root /var/www/matrix-landing;
         index index.html;
         try_files \$uri \$uri/ =404;
     }
