@@ -1,50 +1,78 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Core.Mohjave Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Transparency & Approval (NON-NEGOTIABLE)
+Every operation Claude performs must be transparent and explicitly approved by the human administrator.  
+Claude can propose system-level plans or configurations but cannot self-execute without human consent.  
+All actions must be logged with timestamps and justifications under `/opt/core-setup/logs/`.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Security & Least Privilege
+Claude must follow least-privilege and defense-in-depth principles:  
+- Use restricted service accounts.  
+- No plaintext secrets or API keys.  
+- Enforce SSH key-based access (port 4926).  
+- Ensure firewall (UFW) + fail2ban + TLS are always active.  
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Reproducibility & Script-First Design
+All configurations must be script-driven, idempotent, and reproducible.  
+The entire system must be restorable via:
+```bash
+sudo /opt/core-setup/redeploy.sh
+```
+Manual changes to the system without script updates are not permitted.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Observability & Auditability
+All system changes, service restarts, and configuration updates must be logged and observable.  
+Structured logs must exist for Jenkins, Nginx, SSL, and automation events.  
+Any unexpected behavior or security violation must trigger a report to the human administrator.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Extensibility & Modularity
+Each DevOps component (CI/CD, Registry, Observability, Security) must be modular.  
+Claude can propose or register new modules under `/opt/core-setup/modules.d/` following the naming convention `module-[feature].sh`.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### VI. Testing
+Before concluding each phase, the E2E test MUST be run and the E2E test must be green. Otherwise, next phase MUST not be started.
+Each of the new feature/bug-fix/update should be shipped with an addition/updation of E2E test. 
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+---
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Security Requirements
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- HTTPS enforced sitewide using Let’s Encrypt or DNS-01 certificates.  
+- Firewall (UFW) rules: only allow 4926, 80, 81, 443, 8080.  
+- SSH: no root login, no password login.  
+- Backups encrypted via Restic or BorgBackup and stored locally + remotely.  
+- Regular security scans and OS patch updates must be performed monthly.  
+- Anti-bot and rate-limiting protection must be configured in Nginx.  
+- CrowdSec or fail2ban must monitor all inbound ports.
+
+---
+
+## Development Workflow
+
+1. **Proposal Stage:** Claude drafts automation scripts or plans.  
+2. **Approval Stage:** Human administrator reviews and explicitly approves.  
+3. **Execution Stage:** Claude executes with full logs and rollback checkpoints.  
+4. **Validation Stage:** Jenkins tests verify successful provisioning.  
+5. **Audit Stage:** All actions recorded in `/opt/core-setup/logs/change-history.log`.
+
+**CI/CD Integration Requirements**
+- Jenkins must run behind HTTPS on port 8080 proxied via Nginx.  
+- Webhooks must connect securely to GitHub/GitLab.  
+- Artifact builds (ISO, JAR, NPM, Docker) must be stored in `/srv/data/artifacts/` or Nexus/Harbor.  
+- CI jobs must use declarative pipelines with fail-safe rollback on errors.
+
+---
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- This constitution overrides all local ad-hoc practices.  
+- Amendments require written documentation and human approval.  
+- Any non-compliant configuration must be reverted.  
+- Backward compatibility with existing scripts must be preserved unless explicitly deprecated.  
+- Complexity or external dependencies must always be justified.  
+- Use `guidance.md` for runtime behavior rules and day-to-day operational updates.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2025-10-23 | **Last Amended**: 2025-10-23
+

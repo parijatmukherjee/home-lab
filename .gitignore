@@ -1,0 +1,127 @@
+# Home CI/CD Server - Git Ignore
+# Generated: 2025-10-23
+
+# ============================================================================
+# Secrets and Credentials (CRITICAL - Never commit!)
+# ============================================================================
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example
+**/config/*.conf
+!**/config/*.conf.template
+**/config/users.htpasswd
+**/config/.restic-key
+**/config/backup.conf
+!**/config/backup.conf.template
+secrets/
+credentials/
+*.secret
+*.secret.*
+
+# ============================================================================
+# Logs and Temporary Files
+# ============================================================================
+*.log
+*.log.*
+logs/
+/opt/core-setup/logs/
+/var/log/central/
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================================================
+# Backup and Recovery Data
+# ============================================================================
+backups/
+*.backup
+*.bak
+/srv/backups/
+/opt/core-setup/backups/config-snapshots/
+*.snapshot
+*.restic
+
+# ============================================================================
+# Build Artifacts and Data
+# ============================================================================
+/srv/data/artifacts/
+/srv/data/jenkins-home/
+/srv/data/docker-registry/
+*.iso
+*.jar
+*.tgz
+*.whl
+*.egg
+
+# ============================================================================
+# System and Service State
+# ============================================================================
+/var/lib/jenkins/
+/var/lib/docker/
+/etc/nginx/sites-enabled/
+/etc/nginx/sites-available/
+*.pid
+*.sock
+
+# ============================================================================
+# IDE and Editor Files
+# ============================================================================
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# ============================================================================
+# OS-Specific
+# ============================================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================================================
+# Bash and Shell Script Development
+# ============================================================================
+*.orig
+*.rej
+.shellcheckrc.local
+
+# ============================================================================
+# Testing and Coverage
+# ============================================================================
+coverage/
+.coverage
+htmlcov/
+test-results/
+*.test
+*.out
+
+# ============================================================================
+# Package Management
+# ============================================================================
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+venv/
+.venv/
+env/
+
+# ============================================================================
+# Allow Templates and Examples
+# ============================================================================
+!scripts/deployment/config/*.template
+!scripts/deployment/config/*.example
+!docs/**

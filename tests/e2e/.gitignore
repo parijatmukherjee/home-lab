@@ -1,0 +1,6 @@
+# E2E Test Logs
+logs/
+*.log
+
+# Docker artifacts
+.dockerignore
