@@ -125,6 +125,7 @@ DIRECTORIES_CREATED=yes
 HOSTNAME_CONFIGURED=yes
 TIMEZONE_CONFIGURED=yes
 NTP_CONFIGURED=yes
+SSH_HARDENED=yes
 
 EOF
 
@@ -480,6 +481,52 @@ EOF
 }
 
 # ============================================================================
+# SSH Hardening Configuration
+# ============================================================================
+
+function configure_ssh_hardening() {
+    log_task_start "Configure SSH hardening"
+
+    # SSH configuration
+    local SSH_PORT="${SSH_PORT:-4926}"
+    local sshd_config="/etc/ssh/sshd_config"
+
+    # Backup original config
+    backup_file "$sshd_config"
+
+    # Update SSH port
+    if grep -q "^Port " "$sshd_config"; then
+        sed -i "s/^Port .*/Port $SSH_PORT/" "$sshd_config"
+    elif grep -q "^#Port 22" "$sshd_config"; then
+        sed -i "s/^#Port 22/Port $SSH_PORT/" "$sshd_config"
+    else
+        # Add Port directive after Include if it exists, otherwise at the top
+        if grep -q "^Include" "$sshd_config"; then
+            sed -i "/^Include/a Port $SSH_PORT" "$sshd_config"
+        else
+            sed -i "1i Port $SSH_PORT" "$sshd_config"
+        fi
+    fi
+
+    # Verify configuration
+    if sshd -t 2>/dev/null; then
+        log_success "SSH configuration is valid"
+
+        # Restart SSH service (handle systemd socket activation)
+        systemctl daemon-reload
+        systemctl restart ssh.socket 2>/dev/null || true
+        systemctl restart ssh.service
+
+        log_success "SSH configured to use port $SSH_PORT"
+        log_task_complete
+        return 0
+    else
+        log_task_failed "SSH configuration test failed"
+        return 1
+    fi
+}
+
+# ============================================================================
 # Main Module Execution
 # ============================================================================
 
@@ -511,6 +558,7 @@ function main() {
     configure_ntp || true
     configure_system_limits || true
     configure_sysctl || true
+    configure_ssh_hardening || return 1
 
     # Save module state
     save_module_state
