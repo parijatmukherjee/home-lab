@@ -1,7 +1,7 @@
 # Home CI/CD Server - Makefile
 # Simplified interface for deployment and management
 
-.PHONY: help deploy clean status test validate dry-run backup restore ssl ssl-staging ssl-renew ssl-renew-test ssl-status ssl-revoke
+.PHONY: help deploy clean status test validate dry-run backup restore ssl ssl-dns ssl-staging ssl-renew ssl-renew-test ssl-status ssl-revoke
 
 # Default target
 .DEFAULT_GOAL := help
@@ -323,6 +323,16 @@ ssl: ## Setup free HTTPS certificates from Let's Encrypt
 	fi
 	@sudo scripts/ssl/setup-ssl.sh
 	@echo "$(GREEN)SSL setup complete!$(NC)"
+
+ssl-dns: ## Setup HTTPS using DNS challenge (works when HTTP challenge fails)
+	@echo "$(BLUE)Setting up SSL certificates using DNS challenge...$(NC)"
+	@echo "$(YELLOW)Note: You will need to manually add DNS TXT records during this process$(NC)"
+	@if [ ! -f "scripts/ssl/setup-ssl-dns.sh" ]; then \
+		echo "$(RED)Error: DNS SSL setup script not found$(NC)"; \
+		exit 1; \
+	fi
+	@sudo scripts/ssl/setup-ssl-dns.sh
+	@echo "$(GREEN)SSL DNS setup complete!$(NC)"
 
 ssl-staging: ## Test SSL setup using Let's Encrypt staging (certificates won't be trusted)
 	@echo "$(YELLOW)Testing SSL setup with staging certificates...$(NC)"

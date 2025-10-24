@@ -4,7 +4,7 @@ This directory contains scripts for obtaining and managing free SSL certificates
 
 ## Quick Start
 
-### Setup HTTPS (Production)
+### Method 1: HTTP Challenge (Automated - Recommended if it works)
 
 ```bash
 make ssl
@@ -16,6 +16,27 @@ This will:
 - ✓ Obtain SSL certificates from Let's Encrypt
 - ✓ Configure nginx for HTTPS with automatic HTTP→HTTPS redirect
 - ✓ Setup automatic certificate renewal
+
+### Method 2: DNS Challenge (Manual - Use when HTTP fails)
+
+**Use this if you get CAA or SERVFAIL DNS errors:**
+
+```bash
+make ssl-dns
+```
+
+This method:
+- ✓ Works around DNS provider CAA limitations
+- ✓ Uses DNS TXT records for validation
+- ⚠ Requires manual DNS record updates
+- ⚠ Certificate renewal is not fully automated
+
+**Process:**
+1. Script requests certificates
+2. You're prompted to add DNS TXT records to Dynu
+3. Wait 2-5 minutes for DNS propagation
+4. Press Enter to complete validation
+5. Certificates are installed and nginx configured
 
 ### Test Setup (Staging)
 
