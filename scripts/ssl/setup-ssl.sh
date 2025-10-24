@@ -133,26 +133,51 @@ check_port_80() {
 # ============================================================================
 
 install_certbot() {
+    log_info "Checking certbot installation..."
+
+    # Check if certbot is installed
+    local certbot_installed=false
+    local nginx_plugin_installed=false
+
     if command -v certbot >/dev/null 2>&1; then
+        certbot_installed=true
         log_success "Certbot is already installed ($(certbot --version))"
-        return 0
     fi
 
-    log_info "Installing certbot..."
+    # Check if nginx plugin is installed
+    if certbot plugins 2>/dev/null | grep -q "nginx"; then
+        nginx_plugin_installed=true
+        log_success "Certbot nginx plugin is installed"
+    fi
 
-    # Update package list
-    apt-get update -qq
+    # Install what's needed
+    if [[ "$certbot_installed" == "false" ]] || [[ "$nginx_plugin_installed" == "false" ]]; then
+        log_info "Installing certbot and nginx plugin..."
 
-    # Install certbot and nginx plugin
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
-        certbot \
-        python3-certbot-nginx
+        # Update package list
+        apt-get update -qq
 
-    if command -v certbot >/dev/null 2>&1; then
-        log_success "Certbot installed successfully ($(certbot --version))"
+        # Install certbot and nginx plugin
+        DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            certbot \
+            python3-certbot-nginx
+
+        # Verify installation
+        if ! command -v certbot >/dev/null 2>&1; then
+            log_error "Failed to install certbot"
+            exit 1
+        fi
+
+        if ! certbot plugins 2>/dev/null | grep -q "nginx"; then
+            log_error "Failed to install certbot nginx plugin"
+            log_info "Installed plugins:"
+            certbot plugins
+            exit 1
+        fi
+
+        log_success "Certbot and nginx plugin installed successfully ($(certbot --version))"
     else
-        log_error "Failed to install certbot"
-        exit 1
+        log_success "Certbot and nginx plugin are already installed"
     fi
 }
 
