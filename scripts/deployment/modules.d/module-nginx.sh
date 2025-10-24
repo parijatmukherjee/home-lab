@@ -316,6 +316,15 @@ server {
     #     return 301 https://\$server_name\$request_uri;
     # }
 
+    # Auth API proxy
+    location /api/auth {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+
     # Matrix landing page (public access - has its own UI)
     location / {
         root /var/www/matrix-landing;
@@ -370,10 +379,6 @@ server {
     # Rate limiting for Jenkins
     limit_req zone=general burst=20 nodelay;
     limit_conn addr 10;
-
-    # All paths require authentication
-    auth_basic "Jenkins CI/CD";
-    auth_basic_user_file /opt/core-setup/config/users.htpasswd;
 
     # Matrix landing page for root
     location = / {
@@ -538,23 +543,9 @@ server {
     auth_basic "Monitoring Dashboard";
     auth_basic_user_file /opt/core-setup/config/users.htpasswd;
 
-    # Matrix landing page for root
-    location = / {
-        root /var/www/matrix-landing;
-        try_files /index.html =404;
-    }
-
-    # Serve matrix landing page static assets
-    location /assets/ {
-        root /var/www/matrix-landing;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-
-    # Monitoring dashboard
-    location /netdata {
-
-        proxy_pass http://netdata;
+    # Proxy all requests to Netdata
+    location / {
+        proxy_pass http://netdata/;
         proxy_redirect default;
         proxy_http_version 1.1;
 
@@ -663,6 +654,128 @@ EOF
 
     log_task_complete
     return 0
+}
+
+# ============================================================================
+# Auth Service Deployment
+# ============================================================================
+
+function deploy_auth_service() {
+    log_task_start "Deploy authentication service"
+
+    local auth_service_script="${DEPLOYMENT_SCRIPTS}/auth-service.js"
+    local systemd_service="/etc/systemd/system/auth-service.service"
+
+    # Create auth service script
+    cat > "$auth_service_script" << 'EOF'
+const http = require('http');
+
+const ADMIN_USERNAME = 'admin';
+let ADMIN_PASSWORD = 'cTTcudJxW0UVSH8SZtussnlA';
+
+// Try to read password from config file
+const fs = require('fs');
+const configPath = '/opt/core-setup/config/.admin-password';
+try {
+  const content = fs.readFileSync(configPath, 'utf8');
+  const match = content.match(/Password:\s*(.+)/);
+  if (match) {
+    ADMIN_PASSWORD = match[1].trim();
+  }
+} catch (err) {
+  console.error('Warning: Could not read admin password from config, using default');
+}
+
+const server = http.createServer((req, res) => {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/api/auth') {
+    let body = '';
+
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+
+    req.on('end', () => {
+      try {
+        const { username, password } = JSON.parse(body);
+
+        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            message: 'Authentication successful',
+            username: ADMIN_USERNAME
+          }));
+        } else {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: false,
+            message: 'Invalid credentials'
+          }));
+        }
+      } catch (error) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: false,
+          message: 'Bad request'
+        }));
+      }
+    });
+  } else {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, message: 'Not found' }));
+  }
+});
+
+const PORT = 3001;
+server.listen(PORT, '127.0.0.1', () => {
+  console.log(\`Auth service running on http://127.0.0.1:\${PORT}\`);
+});
+EOF
+
+    chmod 755 "$auth_service_script"
+
+    # Create systemd service
+    cat > "$systemd_service" << EOF
+[Unit]
+Description=Matrix Landing Page Auth Service
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=${DEPLOYMENT_SCRIPTS}
+ExecStart=/usr/bin/node ${auth_service_script}
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Enable and start service
+    systemctl daemon-reload
+    systemctl enable auth-service
+    systemctl restart auth-service
+
+    if systemctl is-active --quiet auth-service; then
+        log_success "Auth service deployed and running"
+        log_task_complete
+        return 0
+    else
+        log_task_failed "Auth service failed to start"
+        return 1
+    fi
 }
 
 # ============================================================================
@@ -902,6 +1015,9 @@ function main() {
 
     # Deploy matrix landing page
     deploy_matrix_landing_page || return 1
+
+    # Deploy auth service
+    deploy_auth_service || return 1
 
     # Test and restart
     test_nginx_configuration || return 1

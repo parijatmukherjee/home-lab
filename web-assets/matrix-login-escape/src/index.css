@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 4%;
+    --foreground: 130 100% 70%;
+
+    --card: 0 0% 8%;
+    --card-foreground: 130 100% 70%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 130 100% 70%;
+
+    --primary: 130 100% 50%;
+    --primary-foreground: 0 0% 4%;
+
+    --secondary: 130 50% 20%;
+    --secondary-foreground: 130 100% 70%;
+
+    --muted: 130 30% 15%;
+    --muted-foreground: 130 50% 50%;
+
+    --accent: 45 100% 50%;
+    --accent-foreground: 0 0% 4%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 130 50% 20%;
+    --input: 130 50% 15%;
+    --ring: 130 100% 50%;
+
+    --radius: 0.25rem;
+
+    --matrix-glow: 130 100% 50%;
+    --matrix-dim: 130 50% 30%;
+    --warning: 45 100% 50%;
+    --danger: 0 100% 50%;
+    
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 130 100% 70%;
+    --sidebar-primary: 130 100% 50%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 130 50% 20%;
+    --sidebar-accent-foreground: 130 100% 70%;
+    --sidebar-border: 130 50% 20%;
+    --sidebar-ring: 130 100% 50%;
+  }
+
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 130 100% 70%;
+
+    --card: 0 0% 8%;
+    --card-foreground: 130 100% 70%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 130 100% 70%;
+
+    --primary: 130 100% 50%;
+    --primary-foreground: 0 0% 4%;
+
+    --secondary: 130 50% 20%;
+    --secondary-foreground: 130 100% 70%;
+
+    --muted: 130 30% 15%;
+    --muted-foreground: 130 50% 50%;
+
+    --accent: 45 100% 50%;
+    --accent-foreground: 0 0% 4%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 130 50% 20%;
+    --input: 130 50% 15%;
+    --ring: 130 100% 50%;
+    
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 130 100% 70%;
+    --sidebar-primary: 130 100% 50%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 130 50% 20%;
+    --sidebar-accent-foreground: 130 100% 70%;
+    --sidebar-border: 130 50% 20%;
+    --sidebar-ring: 130 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-mono;
+  }
+
+  @keyframes matrix-rain {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh);
+      opacity: 0;
+    }
+  }
+
+  @keyframes glitch {
+    0%, 100% {
+      transform: translate(0);
+    }
+    20% {
+      transform: translate(-2px, 2px);
+    }
+    40% {
+      transform: translate(-2px, -2px);
+    }
+    60% {
+      transform: translate(2px, 2px);
+    }
+    80% {
+      transform: translate(2px, -2px);
+    }
+  }
+
+  @keyframes flicker {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes scan-line {
+    0% {
+      top: 0%;
+    }
+    100% {
+      top: 100%;
+    }
+  }
+
+  .matrix-text {
+    text-shadow: 0 0 10px hsl(var(--matrix-glow)), 0 0 20px hsl(var(--matrix-glow));
+    animation: flicker 3s infinite;
+  }
+
+  .glitch-effect {
+    animation: glitch 0.3s infinite;
+  }
+
+  .typewriter {
+    overflow: hidden;
+    border-right: 2px solid hsl(var(--primary));
+    white-space: nowrap;
+    animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+  }
+
+  @keyframes typing {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
+  }
+
+  @keyframes blink-caret {
+    from, to {
+      border-color: transparent;
+    }
+    50% {
+      border-color: hsl(var(--primary));
+    }
+  }
+}
