@@ -146,79 +146,9 @@ EOF
     # Create metadata directory
     ensure_directory "$ARTIFACT_METADATA_DIR" "750" "www-data:www-data"
 
-    # Create index page
-    cat > "${ARTIFACTS_DIR}/index.html" << 'EOF'
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artifact Repository</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 50px auto; padding: 20px; }
-        h1 { color: #333; }
-        .artifact-type { margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 5px; }
-        .artifact-type h2 { margin-top: 0; color: #0066cc; }
-        .artifact-type a { color: #0066cc; text-decoration: none; font-weight: bold; }
-        .artifact-type a:hover { text-decoration: underline; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 30px; }
-        .stat-box { padding: 15px; background: #e8f4f8; border-radius: 5px; text-align: center; }
-        .stat-box h3 { margin: 0 0 10px 0; color: #0066cc; }
-        .stat-box .value { font-size: 24px; font-weight: bold; color: #333; }
-        code { background: #e0e0e0; padding: 2px 6px; border-radius: 3px; }
-    </style>
-</head>
-<body>
-    <h1>Artifact Repository</h1>
-    <p>Browse and download build artifacts organized by type, project, and version.</p>
-
-    <div class="artifact-type">
-        <h2>ISO Images</h2>
-        <p>Operating system images and bootable ISOs</p>
-        <a href="iso/">Browse ISO Artifacts →</a>
-    </div>
-
-    <div class="artifact-type">
-        <h2>JAR Files</h2>
-        <p>Java application packages and libraries</p>
-        <a href="jar/">Browse JAR Artifacts →</a>
-    </div>
-
-    <div class="artifact-type">
-        <h2>NPM Packages</h2>
-        <p>Node.js packages and modules</p>
-        <a href="npm/">Browse NPM Artifacts →</a>
-    </div>
-
-    <div class="artifact-type">
-        <h2>Python Packages</h2>
-        <p>Python wheels and source distributions</p>
-        <a href="python/">Browse Python Artifacts →</a>
-    </div>
-
-    <div class="artifact-type">
-        <h2>Docker Images</h2>
-        <p>Docker container images (see Docker Registry)</p>
-        <a href="docker/">Browse Docker Artifacts →</a>
-    </div>
-
-    <div class="artifact-type">
-        <h2>Generic Artifacts</h2>
-        <p>Other build artifacts and binaries</p>
-        <a href="generic/">Browse Generic Artifacts →</a>
-    </div>
-
-    <h2>API Documentation</h2>
-    <p>Upload artifacts using the REST API:</p>
-    <pre><code>curl -X POST -F "file=@artifact.jar" -F "project=myproject" -F "version=1.0.0" \
-  -u username:password http://artifacts.DOMAIN/upload</code></pre>
-
-    <p><small>Artifact Repository - Part of Home CI/CD Server</small></p>
-</body>
-</html>
-EOF
-
-    chown www-data:www-data "${ARTIFACTS_DIR}/index.html"
+    # Note: The artifacts index page (index.html) is created by module-nginx.sh
+    # with the matrix-themed design. This module only handles the storage structure
+    # and upload API service.
 
     log_task_complete
     return 0
