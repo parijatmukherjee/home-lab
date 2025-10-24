@@ -21,62 +21,74 @@ const Index = () => {
         }} />
       </div>
 
-      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-12">
+      <main className="relative z-10 min-h-screen px-4 py-8">
         {showContent && (
-          <>
-            <div className="text-center mb-12 space-y-6 max-w-2xl">
-              <div className="mb-8 space-y-3">
-                <div className="text-primary text-sm font-mono tracking-widest">
-                  &gt; INITIALIZING CORE SYSTEMS...
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground matrix-text">
-                  WELCOME TO THE MOHJAVE MAINFRAME
-                </h2>
-                <p className="text-muted-foreground text-xs font-mono italic">
-                  "What you must learn is that these rules are no different than the rules of a computer system..."
-                </p>
-                <p className="text-primary text-xs font-mono">
-                  &gt; Some of them can be bent. Others can be broken.
-                </p>
-              </div>
+          <div className="container mx-auto min-h-screen flex flex-col">
+            {/* Two Column Layout */}
+            <div className="flex-1 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 
-              <div className="glitch-effect">
-                <h1 className="text-5xl md:text-7xl font-bold text-primary matrix-text mb-4">
-                  ACCESS DENIED
-                </h1>
-              </div>
-              
-              <div className="space-y-4">
-                <p className="text-xl md:text-2xl text-foreground matrix-text">
-                  "You're not supposed to be here, Neo."
-                </p>
-                
-                <div className="bg-card/30 border border-danger p-4 backdrop-blur-sm">
-                  <p className="text-danger text-sm font-mono">
-                    [!] WARNING: This is a restricted area
+              {/* Left Side - Text Content */}
+              <div className="space-y-6 lg:pr-8">
+                <div className="space-y-3">
+                  <div className="text-primary text-sm font-mono tracking-widest">
+                    &gt; INITIALIZING CORE SYSTEMS...
+                  </div>
+                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground matrix-text">
+                    WELCOME TO THE MOHJAVE MAINFRAME
+                  </h2>
+                  <p className="text-muted-foreground text-xs md:text-sm font-mono italic">
+                    "What you must learn is that these rules are no different than the rules of a computer system..."
                   </p>
-                  <p className="text-muted-foreground text-xs font-mono mt-2">
-                    &gt; Unauthorized personnel will be reported
-                  </p>
-                  <p className="text-muted-foreground text-xs font-mono">
-                    &gt; Your IP has been logged: {Math.floor(Math.random() * 255)}.{Math.floor(Math.random() * 255)}.{Math.floor(Math.random() * 255)}.{Math.floor(Math.random() * 255)}
-                  </p>
-                  <p className="text-muted-foreground text-xs font-mono">
-                    &gt; Security protocols: ACTIVE
+                  <p className="text-primary text-xs md:text-sm font-mono">
+                    &gt; Some of them can be bent. Others can be broken.
                   </p>
                 </div>
 
-                <p className="text-foreground text-sm italic font-mono">
-                  But since you're already here... might as well try logging in.
-                  <br />
-                  <span className="text-muted-foreground">(Spoiler: It won't work)</span>
-                </p>
+                <div className="glitch-effect">
+                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-primary matrix-text mb-4">
+                    ACCESS DENIED
+                  </h1>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-lg md:text-xl lg:text-2xl text-foreground matrix-text">
+                    "You're not supposed to be here, Neo."
+                  </p>
+
+                  <div className="bg-card/30 border border-danger p-4 backdrop-blur-sm">
+                    <p className="text-danger text-sm font-mono">
+                      [!] WARNING: This is a restricted area
+                    </p>
+                    <p className="text-muted-foreground text-xs font-mono mt-2">
+                      &gt; Unauthorized personnel will be reported
+                    </p>
+                    <p className="text-muted-foreground text-xs font-mono">
+                      &gt; Your IP has been logged: {Math.floor(Math.random() * 255)}.{Math.floor(Math.random() * 255)}.{Math.floor(Math.random() * 255)}.{Math.floor(Math.random() * 255)}
+                    </p>
+                    <p className="text-muted-foreground text-xs font-mono">
+                      &gt; Security protocols: ACTIVE
+                    </p>
+                  </div>
+
+                  <p className="text-foreground text-sm italic font-mono">
+                    But since you're already here... might as well try logging in.
+                    <br />
+                    <span className="text-muted-foreground">(Spoiler: It won't work)</span>
+                  </p>
+                </div>
               </div>
+
+              {/* Right Side - Login Component */}
+              <div className="flex items-center justify-center lg:pl-8">
+                <div className="w-full max-w-md">
+                  <LoginTerminal />
+                </div>
+              </div>
+
             </div>
 
-            <LoginTerminal />
-
-            <footer className="mt-12 text-center space-y-2">
+            {/* Footer */}
+            <footer className="mt-8 text-center space-y-2 pb-4">
               <p className="text-muted-foreground text-xs font-mono">
                 &gt; core.mohjave.com | System v2.0.77
               </p>
@@ -95,7 +107,7 @@ const Index = () => {
                 </a>
               </p>
             </footer>
-          </>
+          </div>
         )}
       </main>
     </div>
