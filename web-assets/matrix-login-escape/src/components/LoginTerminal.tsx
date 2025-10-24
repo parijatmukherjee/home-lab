@@ -113,7 +113,7 @@ const LoginTerminal = () => {
             &gt; Location: {locationData ? `${locationData.city}, ${locationData.region}, ${locationData.country}` : "Detecting..."}
           </p>
           <p className="text-muted-foreground text-sm mb-1">
-            &gt; Your IP has been logged: {locationData ? locationData.ip : "Detecting..."}
+            &gt; Your IP: {locationData ? locationData.ip : "Detecting..."}
           </p>
           <p className="text-warning text-sm glitch-effect">&gt; WARNING: Unauthorized access detected</p>
         </div>

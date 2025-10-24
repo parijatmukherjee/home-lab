@@ -80,7 +80,7 @@ const Index = () => {
                       &gt; Unauthorized personnel will be reported
                     </p>
                     <p className="text-muted-foreground text-xs font-mono">
-                      &gt; Your IP has been logged: {userIp || "Detecting..."}
+                      &gt; Your IP: {userIp || "Detecting..."}
                     </p>
                     <p className="text-muted-foreground text-xs font-mono">
                       &gt; Security protocols: ACTIVE
