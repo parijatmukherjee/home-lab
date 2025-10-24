@@ -6,6 +6,9 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
+# Mark this as E2E test environment to skip DNS updates
+ENV E2E_TEST_MODE=true
+
 # Install systemd and basic dependencies required for testing
 RUN apt-get update && apt-get install -y \
     systemd \

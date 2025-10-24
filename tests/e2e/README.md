@@ -274,6 +274,7 @@ tests/e2e/
 ```
 ┌─────────────────────────────────────────┐
 │  Ubuntu 24.04 Container                 │
+│  ENV E2E_TEST_MODE=true                 │
 │                                         │
 │  ┌────────────────────────────────┐   │
 │  │  systemd (PID 1)               │   │
@@ -292,9 +293,19 @@ tests/e2e/
 │  │  - Nginx                       │   │
 │  │  - Netdata                     │   │
 │  │  - Fail2ban                    │   │
+│  │  - DNS (SKIPPED in E2E)        │   │
 │  └────────────────────────────────┘   │
 └─────────────────────────────────────────┘
 ```
+
+### Test Environment Variables
+
+The E2E test container sets special environment variables:
+
+- `E2E_TEST_MODE=true` - Marks the environment as a test
+  - **Effect**: DNS module is skipped (no Dynu API calls)
+  - **Reason**: Tests run in isolated Docker containers without real internet DNS
+  - **Modules affected**: `module-dns.sh`
 
 ## Performance
 

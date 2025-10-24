@@ -185,6 +185,13 @@ function show_dns_info() {
 function main() {
     log_module_start "$MODULE_NAME"
 
+    # Skip DNS module in E2E test environments
+    if [[ "${E2E_TEST_MODE:-false}" == "true" ]]; then
+        log_info "Skipping DNS module in E2E test environment"
+        log_module_complete
+        return 0
+    fi
+
     # Check module state
     if check_module_state; then
         log_info "Re-running module (idempotent mode)"
