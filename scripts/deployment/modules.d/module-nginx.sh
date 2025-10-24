@@ -380,22 +380,8 @@ server {
     limit_req zone=general burst=20 nodelay;
     limit_conn addr 10;
 
-    # Matrix landing page for root
-    location = / {
-        root /var/www/matrix-landing;
-        try_files /index.html =404;
-    }
-
-    # Serve matrix landing page static assets
-    location /assets/ {
-        root /var/www/matrix-landing;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-
-    # Jenkins API and actual service
-    location /jenkins {
-
+    # Jenkins at root path
+    location / {
         proxy_pass http://jenkins;
         proxy_redirect default;
         proxy_http_version 1.1;
@@ -955,6 +941,429 @@ EOF
 }
 
 # ============================================================================
+# Matrix Artifacts Page Deployment
+# ============================================================================
+
+function deploy_matrix_artifacts_page() {
+    log_task_start "Deploy matrix-themed artifacts page"
+
+    local artifacts_index="${ARTIFACTS_DIR}/index.html"
+
+    # Ensure artifacts directory exists
+    ensure_directory "$ARTIFACTS_DIR" "755" "www-data:www-data"
+
+    # Create matrix-themed artifacts index page
+    cat > "$artifacts_index" << 'ARTIFACTSEOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artifact Repository - Mohjave Core Systems</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #000000;
+            color: #00ff41;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Matrix rain canvas */
+        #matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        /* Scan lines overlay */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 65, 0.03) 2px,
+                rgba(0, 255, 65, 0.03) 4px
+            );
+            opacity: 0.1;
+        }
+
+        /* Main content */
+        .content {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid #00ff41;
+            background-color: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+            }
+            to {
+                box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            }
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ff41;
+            letter-spacing: 4px;
+        }
+
+        .header .subtitle {
+            font-size: 1rem;
+            color: #00cc33;
+            margin-top: 10px;
+        }
+
+        .warning-box {
+            background-color: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff0000;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .warning-box p {
+            color: #ff0000;
+            font-size: 0.9rem;
+            margin: 5px 0;
+        }
+
+        /* Artifact grid */
+        .artifacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .artifact-card {
+            background-color: rgba(0, 20, 0, 0.9);
+            border: 2px solid #00ff41;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .artifact-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .artifact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
+            border-color: #00ff99;
+        }
+
+        .artifact-card:hover::before {
+            left: 100%;
+        }
+
+        .artifact-card h2 {
+            color: #00ff41;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            text-shadow: 0 0 5px #00ff41;
+        }
+
+        .artifact-card p {
+            color: #00cc33;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .artifact-card a {
+            color: #00ff99;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            padding: 10px 20px;
+            border: 1px solid #00ff41;
+            background-color: rgba(0, 255, 65, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .artifact-card a:hover {
+            background-color: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.6);
+        }
+
+        /* API section */
+        .api-section {
+            background-color: rgba(0, 20, 0, 0.9);
+            border: 2px solid #00cc33;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .api-section h2 {
+            color: #00ff41;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+
+        .api-section pre {
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ff41;
+            padding: 15px;
+            overflow-x: auto;
+            margin: 15px 0;
+            color: #00cc33;
+        }
+
+        .api-section code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 1px solid #00ff41;
+            color: #00cc33;
+            font-size: 0.8rem;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+
+        /* Glitch effect for title */
+        @keyframes glitch {
+            0% {
+                text-shadow: 0 0 10px #00ff41;
+            }
+            25% {
+                text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff;
+            }
+            50% {
+                text-shadow: 0 0 10px #00ff41;
+            }
+            75% {
+                text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+            }
+            100% {
+                text-shadow: 0 0 10px #00ff41;
+            }
+        }
+
+        .glitch {
+            animation: glitch 0.5s infinite;
+        }
+
+        /* Loading animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Matrix rain canvas -->
+    <canvas id="matrix-rain"></canvas>
+
+    <!-- Scan lines overlay -->
+    <div class="scanlines"></div>
+
+    <!-- Main content -->
+    <div class="content fade-in">
+        <div class="header">
+            <h1 class="glitch">ARTIFACT REPOSITORY</h1>
+            <p class="subtitle">&gt; Mohjave Core Systems | Build Artifact Storage</p>
+
+            <div class="warning-box">
+                <p>[!] SECURE AREA: All access is logged and monitored</p>
+                <p>&gt; IP Address: <span id="ip-address"></span></p>
+                <p>&gt; Timestamp: <span id="timestamp"></span></p>
+                <p>&gt; Access Level: PUBLIC</p>
+            </div>
+        </div>
+
+        <div class="artifacts-grid">
+            <div class="artifact-card">
+                <h2>&gt; ISO Images</h2>
+                <p>Operating system images and bootable ISOs for deployment and testing.</p>
+                <a href="iso/">Browse ISO Artifacts &rarr;</a>
+            </div>
+
+            <div class="artifact-card">
+                <h2>&gt; JAR Files</h2>
+                <p>Java application packages, libraries, and compiled bytecode artifacts.</p>
+                <a href="jar/">Browse JAR Artifacts &rarr;</a>
+            </div>
+
+            <div class="artifact-card">
+                <h2>&gt; NPM Packages</h2>
+                <p>Node.js packages, modules, and JavaScript dependencies.</p>
+                <a href="npm/">Browse NPM Artifacts &rarr;</a>
+            </div>
+
+            <div class="artifact-card">
+                <h2>&gt; Python Packages</h2>
+                <p>Python wheels, source distributions, and pip-installable packages.</p>
+                <a href="python/">Browse Python Artifacts &rarr;</a>
+            </div>
+
+            <div class="artifact-card">
+                <h2>&gt; Docker Images</h2>
+                <p>Container images, Dockerfiles, and registry artifacts.</p>
+                <a href="docker/">Browse Docker Artifacts &rarr;</a>
+            </div>
+
+            <div class="artifact-card">
+                <h2>&gt; Generic Artifacts</h2>
+                <p>Miscellaneous build artifacts, binaries, and other files.</p>
+                <a href="generic/">Browse Generic Artifacts &rarr;</a>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>&gt; API Documentation</h2>
+            <p style="color: #00cc33;">Upload artifacts using the REST API endpoint:</p>
+            <pre><code>curl -X POST \
+  -F "file=@artifact.jar" \
+  -F "project=myproject" \
+  -F "version=1.0.0" \
+  -u username:password \
+  http://artifacts.core.mohjave.com/upload</code></pre>
+
+            <p style="color: #00cc33; margin-top: 15px;">Download artifacts directly via HTTP:</p>
+            <pre><code>wget http://artifacts.core.mohjave.com/jar/myproject/1.0.0/artifact.jar</code></pre>
+        </div>
+
+        <div class="footer">
+            <p>&gt; Artifact Repository - Part of Mohjave Home CI/CD Server</p>
+            <p>&gt; System Version: 2.0.77 | Status: ONLINE</p>
+            <p>&gt; "The code is the path. The artifacts are the destination."</p>
+        </div>
+    </div>
+
+    <script>
+        // Matrix rain effect
+        const canvas = document.getElementById('matrix-rain');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?';
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+
+        const drops = [];
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.random() * canvas.height / fontSize;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00ff41';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 35);
+
+        // Resize canvas on window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Update timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            const timestamp = now.toISOString().replace('T', ' ').split('.')[0];
+            document.getElementById('timestamp').textContent = timestamp;
+        }
+
+        // Generate random IP address (for effect)
+        function generateRandomIP() {
+            return Array.from({length: 4}, () => Math.floor(Math.random() * 256)).join('.');
+        }
+
+        document.getElementById('ip-address').textContent = generateRandomIP();
+        updateTimestamp();
+        setInterval(updateTimestamp, 1000);
+    </script>
+</body>
+</html>
+ARTIFACTSEOF
+
+    chown www-data:www-data "$artifacts_index"
+    chmod 644 "$artifacts_index"
+
+    log_success "Matrix artifacts page deployed to $artifacts_index"
+    log_task_complete
+    return 0
+}
+
+# ============================================================================
 # Nginx Service Management
 # ============================================================================
 
@@ -1018,6 +1427,9 @@ function main() {
 
     # Deploy auth service
     deploy_auth_service || return 1
+
+    # Deploy matrix artifacts page
+    deploy_matrix_artifacts_page || return 1
 
     # Test and restart
     test_nginx_configuration || return 1
