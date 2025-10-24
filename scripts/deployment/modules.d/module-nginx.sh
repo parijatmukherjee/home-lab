@@ -20,6 +20,7 @@ set -euo pipefail
 
 MODULE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_DIR="$(cd "$MODULE_DIR/.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Source library functions
 # shellcheck source=../lib/common.sh
@@ -777,14 +778,44 @@ function deploy_matrix_landing_page() {
     log_task_start "Deploy matrix landing page"
 
     local matrix_dest="/var/www/matrix-landing"
-    local matrix_source="${SCRIPT_DIR}/../web-assets/matrix-login-escape/dist"
+
+    # Try multiple possible source locations
+    local matrix_source=""
+    local possible_sources=(
+        "${REPO_ROOT}/web-assets/matrix-login-escape/dist"
+        "/home/${SUDO_USER:-$USER}/workspace/home-lab/web-assets/matrix-login-escape/dist"
+        "${SCRIPT_DIR}/../web-assets/matrix-login-escape/dist"
+    )
+
+    for src in "${possible_sources[@]}"; do
+        if [[ -d "$src" ]]; then
+            matrix_source="$src"
+            log_info "Found matrix landing page at: $matrix_source"
+            break
+        fi
+    done
 
     # Check if source exists
-    if [[ ! -d "$matrix_source" ]]; then
-        log_warn "Matrix landing page source not found: $matrix_source"
+    if [[ -z "$matrix_source" || ! -d "$matrix_source" ]]; then
+        log_warn "Matrix landing page source not found, trying to build..."
 
-        local build_source="${SCRIPT_DIR}/../web-assets/matrix-login-escape"
-        if [[ ! -d "$build_source" ]]; then
+        # Try to find build source
+        local build_source=""
+        local possible_build_sources=(
+            "${REPO_ROOT}/web-assets/matrix-login-escape"
+            "/home/${SUDO_USER:-$USER}/workspace/home-lab/web-assets/matrix-login-escape"
+            "${SCRIPT_DIR}/../web-assets/matrix-login-escape"
+        )
+
+        for src in "${possible_build_sources[@]}"; do
+            if [[ -d "$src" ]]; then
+                build_source="$src"
+                log_info "Found matrix landing page project at: $build_source"
+                break
+            fi
+        done
+
+        if [[ -z "$build_source" || ! -d "$build_source" ]]; then
             log_warn "Matrix landing page project not found at: $build_source"
             log_warn "Skipping matrix landing page deployment - using placeholder"
 
