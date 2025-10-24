@@ -1,7 +1,7 @@
 # Home CI/CD Server - Makefile
 # Simplified interface for deployment and management
 
-.PHONY: help deploy clean status test validate dry-run backup restore
+.PHONY: help deploy clean status test validate dry-run backup restore ssl ssl-staging ssl-renew ssl-renew-test ssl-status ssl-revoke
 
 # Default target
 .DEFAULT_GOAL := help
@@ -311,6 +311,52 @@ backup-config: ## Backup current configuration
 		echo "$(GREEN)Backup created at: $$BACKUP_DIR$(NC)"; \
 	else \
 		echo "$(YELLOW)No deployment found to backup$(NC)"; \
+	fi
+
+##@ SSL/HTTPS
+
+ssl: ## Setup free HTTPS certificates from Let's Encrypt
+	@echo "$(BLUE)Setting up SSL certificates...$(NC)"
+	@if [ ! -f "scripts/ssl/setup-ssl.sh" ]; then \
+		echo "$(RED)Error: SSL setup script not found$(NC)"; \
+		exit 1; \
+	fi
+	@sudo scripts/ssl/setup-ssl.sh
+	@echo "$(GREEN)SSL setup complete!$(NC)"
+
+ssl-staging: ## Test SSL setup using Let's Encrypt staging (certificates won't be trusted)
+	@echo "$(YELLOW)Testing SSL setup with staging certificates...$(NC)"
+	@sudo scripts/ssl/setup-ssl.sh --staging
+	@echo "$(GREEN)SSL staging test complete!$(NC)"
+
+ssl-renew: ## Manually renew SSL certificates
+	@echo "$(BLUE)Renewing SSL certificates...$(NC)"
+	@sudo certbot renew
+	@echo "$(GREEN)Certificate renewal complete!$(NC)"
+
+ssl-renew-test: ## Test SSL certificate renewal (dry-run)
+	@echo "$(BLUE)Testing SSL certificate renewal...$(NC)"
+	@sudo certbot renew --dry-run
+	@echo "$(GREEN)Certificate renewal test complete!$(NC)"
+
+ssl-status: ## Show SSL certificate status
+	@echo "$(BLUE)SSL Certificate Status:$(NC)"
+	@echo ""
+	@if command -v certbot >/dev/null 2>&1; then \
+		sudo certbot certificates; \
+	else \
+		echo "$(YELLOW)Certbot not installed - no certificates configured$(NC)"; \
+		echo "Run 'make ssl' to set up HTTPS"; \
+	fi
+
+ssl-revoke: ## Revoke SSL certificates (CAUTION!)
+	@echo "$(RED)WARNING: This will revoke your SSL certificates!$(NC)"
+	@read -p "Are you sure? Type 'yes' to confirm: " confirm; \
+	if [ "$$confirm" = "yes" ]; then \
+		sudo certbot revoke --cert-name core.mohjave.com; \
+		echo "$(GREEN)Certificates revoked$(NC)"; \
+	else \
+		echo "$(YELLOW)Aborted$(NC)"; \
 	fi
 
 ##@ Troubleshooting
