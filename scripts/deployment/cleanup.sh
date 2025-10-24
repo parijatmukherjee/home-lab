@@ -82,10 +82,10 @@ OPTIONS:
     -h, --help        Show this help message
 
 WHAT THIS SCRIPT DOES:
-    1. Stops all services (Jenkins, Nginx, Netdata, Artifact Upload, Fail2ban)
+    1. Stops all services (Jenkins, Nginx, Netdata, Auth Service, Artifact Upload, Fail2ban)
     2. Removes service configurations
     3. Uninstalls packages (unless --keep-packages is used)
-    4. Removes all data directories
+    4. Removes all data directories (including matrix landing page)
     5. Resets firewall rules (SSH access is preserved)
     6. Removes cron jobs
     7. Creates backup of configs before deletion
@@ -181,6 +181,7 @@ cleanup_services() {
 
     local services=(
         "artifact-upload"
+        "auth-service"
         "netdata"
         "jenkins"
         "nginx"
@@ -193,6 +194,7 @@ cleanup_services() {
 
     # Remove custom systemd services
     remove_systemd_service "artifact-upload"
+    remove_systemd_service "auth-service"
 }
 
 # ============================================================================
@@ -248,7 +250,13 @@ uninstall_packages() {
             log_warn "Failed to remove nginx with apt, trying dpkg"
             dpkg --purge nginx nginx-common nginx-core nginx-full 2>/dev/null || log_error "Failed to remove nginx"
         }
-        rm -rf /etc/nginx /var/www/matrix-landing 2>/dev/null || true
+        rm -rf /etc/nginx /var/www/matrix-landing /var/www/html 2>/dev/null || true
+    fi
+
+    # Remove auth service script
+    if [[ -f "/opt/core-setup/scripts/auth-service.js" ]]; then
+        log_info "Removing auth-service.js"
+        rm -f /opt/core-setup/scripts/auth-service.js 2>/dev/null || true
     fi
 
     # Remove all Netdata packages (including plugins)
@@ -499,7 +507,7 @@ verify_cleanup() {
     local all_clean=true
 
     # Check services
-    local services=("artifact-upload" "netdata" "jenkins" "nginx" "fail2ban")
+    local services=("artifact-upload" "auth-service" "netdata" "jenkins" "nginx" "fail2ban")
     for service in "${services[@]}"; do
         if systemctl is-active --quiet "$service" 2>/dev/null; then
             log_warn "Service still running: $service"
@@ -547,8 +555,8 @@ main() {
         log_warn "═══════════════════════════════════════════════════════════"
         log_warn ""
         log_warn "This operation will:"
-        log_warn "  • Stop all services (Jenkins, Nginx, Netdata, etc.)"
-        log_warn "  • Remove all configurations"
+        log_warn "  • Stop all services (Jenkins, Nginx, Netdata, Auth Service, etc.)"
+        log_warn "  • Remove all configurations (including matrix landing page)"
         log_warn "  • Delete all data in $DEPLOYMENT_ROOT"
         log_warn "  • Delete all data in $DATA_ROOT"
         log_warn "  • Reset firewall rules"
