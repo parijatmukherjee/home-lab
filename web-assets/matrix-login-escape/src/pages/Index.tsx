@@ -66,7 +66,18 @@ const Index = () => {
                 &gt; core.mohjave.com | System v2.0.77
               </p>
               <p className="text-muted-foreground text-xs font-mono">
-                &gt; "There is no spoon. But there is a login form."
+                &gt; "I know Kung Fu... and Bash scripting."
+              </p>
+              <p className="text-foreground text-xs font-mono mt-4">
+                &gt; Crafted by{" "}
+                <a
+                  href="https://github.com/parijatmukherjee"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary/80 transition-colors hover:shadow-[0_0_10px_rgba(0,255,65,0.5)]"
+                >
+                  Parijat Mukherjee
+                </a>
               </p>
             </footer>
           </>

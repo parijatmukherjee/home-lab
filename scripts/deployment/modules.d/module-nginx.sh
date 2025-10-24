@@ -1215,6 +1215,17 @@ function deploy_matrix_artifacts_page() {
             margin: 5px 0;
         }
 
+        .footer a {
+            color: #00ff41;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
         /* Glitch effect for title */
         @keyframes glitch {
             0% {
@@ -1331,7 +1342,8 @@ function deploy_matrix_artifacts_page() {
         <div class="footer">
             <p>&gt; Artifact Repository - Part of Mohjave Home CI/CD Server</p>
             <p>&gt; System Version: 2.0.77 | Status: ONLINE</p>
-            <p>&gt; "The code is the path. The artifacts are the destination."</p>
+            <p>&gt; "Unfortunately, no one can be told what the Matrix is... you have to deploy it yourself."</p>
+            <p style="margin-top: 15px;">&gt; Crafted by <a href="https://github.com/parijatmukherjee" target="_blank" rel="noopener noreferrer">Parijat Mukherjee</a></p>
         </div>
     </div>
 
