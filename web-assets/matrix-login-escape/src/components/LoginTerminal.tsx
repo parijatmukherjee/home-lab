@@ -1,15 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
+interface LocationData {
+  ip: string;
+  city: string;
+  region: string;
+  country: string;
+}
+
 const LoginTerminal = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [locationData, setLocationData] = useState<LocationData | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Fetch user's real IP and location
+    const fetchLocationData = async () => {
+      try {
+        const response = await fetch("https://ipapi.co/json/");
+        const data = await response.json();
+        setLocationData({
+          ip: data.ip,
+          city: data.city,
+          region: data.region,
+          country: data.country_name,
+        });
+      } catch (error) {
+        console.error("Failed to fetch location data:", error);
+        // Fallback to just showing a placeholder
+        setLocationData({
+          ip: "UNKNOWN",
+          city: "UNKNOWN",
+          region: "UNKNOWN",
+          country: "UNKNOWN",
+        });
+      }
+    };
+
+    fetchLocationData();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +109,12 @@ const LoginTerminal = () => {
         <div className="mb-6">
           <p className="text-primary matrix-text mb-2">&gt; SYSTEM ACCESS TERMINAL</p>
           <p className="text-muted-foreground text-sm mb-1">&gt; Connection: SECURE</p>
-          <p className="text-muted-foreground text-sm mb-1">&gt; Location: UNKNOWN</p>
+          <p className="text-muted-foreground text-sm mb-1">
+            &gt; Location: {locationData ? `${locationData.city}, ${locationData.region}, ${locationData.country}` : "Detecting..."}
+          </p>
+          <p className="text-muted-foreground text-sm mb-1">
+            &gt; Your IP has been logged: {locationData ? locationData.ip : "Detecting..."}
+          </p>
           <p className="text-warning text-sm glitch-effect">&gt; WARNING: Unauthorized access detected</p>
         </div>
 

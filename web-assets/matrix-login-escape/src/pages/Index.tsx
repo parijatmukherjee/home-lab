@@ -4,10 +4,27 @@ import LoginTerminal from "@/components/LoginTerminal";
 
 const Index = () => {
   const [showContent, setShowContent] = useState(false);
+  const [userIp, setUserIp] = useState<string>("");
 
   useEffect(() => {
     const timer = setTimeout(() => setShowContent(true), 500);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Fetch user's real IP address
+    const fetchIp = async () => {
+      try {
+        const response = await fetch("https://api.ipify.org?format=json");
+        const data = await response.json();
+        setUserIp(data.ip);
+      } catch (error) {
+        console.error("Failed to fetch IP:", error);
+        setUserIp("UNKNOWN");
+      }
+    };
+
+    fetchIp();
   }, []);
 
   return (
@@ -63,7 +80,7 @@ const Index = () => {
                       &gt; Unauthorized personnel will be reported
                     </p>
                     <p className="text-muted-foreground text-xs font-mono">
-                      &gt; Your IP has been logged: {Math.floor(Math.random() * 255)}.{Math.floor(Math.random() * 255)}.{Math.floor(Math.random() * 255)}.{Math.floor(Math.random() * 255)}
+                      &gt; Your IP has been logged: {userIp || "Detecting..."}
                     </p>
                     <p className="text-muted-foreground text-xs font-mono">
                       &gt; Security protocols: ACTIVE
