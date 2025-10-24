@@ -25,6 +25,21 @@ const Index = () => {
         {showContent && (
           <>
             <div className="text-center mb-12 space-y-6 max-w-2xl">
+              <div className="mb-8 space-y-3">
+                <div className="text-primary text-sm font-mono tracking-widest">
+                  &gt; INITIALIZING CORE SYSTEMS...
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground matrix-text">
+                  WELCOME TO THE MOHJAVE MAINFRAME
+                </h2>
+                <p className="text-muted-foreground text-xs font-mono italic">
+                  "What you must learn is that these rules are no different than the rules of a computer system..."
+                </p>
+                <p className="text-primary text-xs font-mono">
+                  &gt; Some of them can be bent. Others can be broken.
+                </p>
+              </div>
+
               <div className="glitch-effect">
                 <h1 className="text-5xl md:text-7xl font-bold text-primary matrix-text mb-4">
                   ACCESS DENIED
