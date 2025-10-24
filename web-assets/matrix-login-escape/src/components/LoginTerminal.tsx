@@ -108,7 +108,7 @@ const LoginTerminal = () => {
             className="w-full bg-primary hover:bg-primary/80 text-primary-foreground font-mono font-bold border border-primary shadow-lg shadow-primary/50 transition-all"
             disabled={isProcessing}
           >
-            {isProcessing ? "&gt; PROCESSING..." : "&gt; INITIATE ACCESS"}
+            {isProcessing ? "> PROCESSING..." : "> INITIATE ACCESS"}
           </Button>
         </form>
 
