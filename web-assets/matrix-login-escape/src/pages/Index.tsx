@@ -23,9 +23,9 @@ const Index = () => {
 
       <main className="relative z-10 min-h-screen px-4 py-8">
         {showContent && (
-          <div className="container mx-auto min-h-screen flex flex-col">
+          <div className="container mx-auto min-h-screen flex flex-col justify-center">
             {/* Two Column Layout */}
-            <div className="flex-1 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 
               {/* Left Side - Text Content */}
               <div className="space-y-6 lg:pr-8">
@@ -88,7 +88,7 @@ const Index = () => {
             </div>
 
             {/* Footer */}
-            <footer className="mt-8 text-center space-y-2 pb-4">
+            <footer className="mt-6 text-center space-y-2">
               <p className="text-muted-foreground text-xs font-mono">
                 &gt; core.mohjave.com | System v2.0.77
               </p>
