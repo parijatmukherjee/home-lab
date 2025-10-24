@@ -731,7 +731,7 @@ const server = http.createServer((req, res) => {
 
 const PORT = 3001;
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(\`Auth service running on http://127.0.0.1:\${PORT}\`);
+  console.log('Auth service running on http://127.0.0.1:' + PORT);
 });
 EOF
 
@@ -754,6 +754,13 @@ RestartSec=10
 [Install]
 WantedBy=multi-user.target
 EOF
+
+    # Ensure password file is readable by www-data user
+    if [[ -f "${DEPLOYMENT_CONFIG}/.admin-password" ]]; then
+        chgrp www-data "${DEPLOYMENT_CONFIG}/.admin-password"
+        chmod 640 "${DEPLOYMENT_CONFIG}/.admin-password"
+        log_info "Password file permissions set for www-data access"
+    fi
 
     # Enable and start service
     systemctl daemon-reload
