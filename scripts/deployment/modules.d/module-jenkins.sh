@@ -260,6 +260,63 @@ function install_jenkins() {
     return 1
 }
 
+function ensure_jenkins_user() {
+    log_task_start "Ensure Jenkins user exists"
+
+    # Check if jenkins user already exists
+    if id -u jenkins >/dev/null 2>&1; then
+        log_info "Jenkins user already exists"
+
+        # Ensure directories have correct ownership
+        if [[ -d "$JENKINS_HOME" ]]; then
+            chown -R jenkins:jenkins "$JENKINS_HOME"
+        fi
+        if [[ -d "/var/cache/jenkins" ]]; then
+            chown -R jenkins:jenkins "/var/cache/jenkins"
+        fi
+
+        log_task_complete
+        return 0
+    fi
+
+    log_warn "Jenkins user missing (likely after cleanup) - reinstalling Jenkins to fix"
+
+    # If user doesn't exist but Jenkins is installed, the installation is corrupted
+    # Best solution is to purge and reinstall
+    if check_command jenkins; then
+        log_info "Purging corrupted Jenkins installation..."
+        DEBIAN_FRONTEND=noninteractive apt-get purge -y jenkins >/dev/null 2>&1 || true
+
+        log_info "Reinstalling Jenkins..."
+        if DEBIAN_FRONTEND=noninteractive apt-get install -y jenkins; then
+            log_success "Jenkins reinstalled successfully"
+        else
+            log_task_failed "Failed to reinstall Jenkins"
+            return 1
+        fi
+    fi
+
+    # Verify user was created by package installation
+    if ! id -u jenkins >/dev/null 2>&1; then
+        log_error "Jenkins user still doesn't exist after reinstallation"
+        log_task_failed "Failed to create Jenkins user"
+        return 1
+    fi
+
+    # Ensure directories have correct ownership
+    if [[ -d "$JENKINS_HOME" ]]; then
+        chown -R jenkins:jenkins "$JENKINS_HOME"
+        chmod 755 "$JENKINS_HOME"
+    fi
+    if [[ -d "/var/cache/jenkins" ]]; then
+        chown -R jenkins:jenkins "/var/cache/jenkins"
+    fi
+
+    log_success "Jenkins user verified"
+    log_task_complete
+    return 0
+}
+
 # ============================================================================
 # Jenkins Configuration
 # ============================================================================
@@ -672,6 +729,7 @@ function main() {
     # Install Jenkins
     add_jenkins_repository || return 1
     install_jenkins || return 1
+    ensure_jenkins_user || return 1
 
     # Configure Jenkins
     configure_jenkins_defaults || return 1

@@ -134,6 +134,37 @@ function install_netdata() {
 # Netdata Configuration
 # ============================================================================
 
+function setup_netdata_directories() {
+    log_task_start "Setup Netdata directories"
+
+    # Create required directories with proper ownership
+    local dirs=(
+        "/var/log/netdata"
+        "/var/lib/netdata"
+        "/var/cache/netdata"
+        "/var/lib/netdata/registry"
+    )
+
+    for dir in "${dirs[@]}"; do
+        if [[ ! -d "$dir" ]]; then
+            log_info "Creating directory: $dir"
+            mkdir -p "$dir"
+        fi
+
+        # Set ownership to netdata user
+        if id -u netdata >/dev/null 2>&1; then
+            chown -R netdata:netdata "$dir"
+            chmod 755 "$dir"
+            log_info "Set ownership of $dir to netdata:netdata"
+        else
+            log_warn "netdata user not found, will be created during installation"
+        fi
+    done
+
+    log_task_complete
+    return 0
+}
+
 function configure_netdata() {
     log_task_start "Configure Netdata"
 
@@ -334,6 +365,9 @@ function main() {
 
     # Install Netdata
     install_netdata || return 1
+
+    # Setup directories (after installation, so netdata user exists)
+    setup_netdata_directories || return 1
 
     # Configure Netdata
     configure_netdata || return 1

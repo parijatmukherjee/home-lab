@@ -39,6 +39,11 @@ MODULE_DESCRIPTION="Nginx web server and reverse proxy configuration"
 # Configuration
 # ============================================================================
 
+# Deployment directories (must match module-base-system.sh)
+DEPLOYMENT_ROOT="/opt/core-setup"
+DEPLOYMENT_SCRIPTS="${DEPLOYMENT_ROOT}/scripts"
+DEPLOYMENT_CONFIG="${DEPLOYMENT_ROOT}/config"
+
 # Nginx configuration paths
 NGINX_CONF_DIR="/etc/nginx"
 NGINX_SITES_AVAILABLE="${NGINX_CONF_DIR}/sites-available"
