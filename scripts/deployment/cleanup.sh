@@ -402,6 +402,41 @@ cleanup_cron_jobs() {
             fi
         fi
     done
+
+    # Remove DNS update cron job from root's crontab
+    if crontab -l 2>/dev/null | grep -q "update-dynu-dns.sh"; then
+        log_info "Removing DNS update cron job from root crontab"
+
+        if [[ "$DRY_RUN" == true ]]; then
+            log_info "[DRY RUN] Would remove DNS update cron job"
+        else
+            (crontab -l 2>/dev/null | grep -v "update-dynu-dns.sh") | crontab -
+            log_success "DNS update cron job removed"
+        fi
+    fi
+}
+
+cleanup_dns() {
+    echo ""; echo "=== Cleaning up DNS configuration ==="; echo ""
+
+    local dns_files=(
+        "${DEPLOYMENT_ROOT}/scripts/update-dynu-dns.sh"
+        "${DEPLOYMENT_ROOT}/config/.dynu-api-key"
+        "${DEPLOYMENT_ROOT}/config/.dns.state"
+        "/var/log/dynu-dns-update.log"
+    )
+
+    for dns_file in "${dns_files[@]}"; do
+        if [[ -f "$dns_file" ]]; then
+            log_info "Removing DNS file: $dns_file"
+
+            if [[ "$DRY_RUN" == true ]]; then
+                log_info "[DRY RUN] Would remove: $dns_file"
+            else
+                rm -f "$dns_file"
+            fi
+        fi
+    done
 }
 
 # ============================================================================
@@ -557,6 +592,7 @@ main() {
         log_warn "This operation will:"
         log_warn "  • Stop all services (Jenkins, Nginx, Netdata, Auth Service, etc.)"
         log_warn "  • Remove all configurations (including matrix landing page)"
+        log_warn "  • Remove DNS update cron jobs and credentials"
         log_warn "  • Delete all data in $DEPLOYMENT_ROOT"
         log_warn "  • Delete all data in $DATA_ROOT"
         log_warn "  • Reset firewall rules"
@@ -577,6 +613,7 @@ main() {
     cleanup_services
     cleanup_nginx_configs
     cleanup_cron_jobs
+    cleanup_dns
     cleanup_firewall
     cleanup_directories
     uninstall_packages

@@ -77,6 +77,7 @@ SKIP_VALIDATION=false
 # Available modules (in dependency order)
 ALL_MODULES=(
     "base-system"
+    "dns"
     "firewall"
     "users"
     "nginx"
@@ -88,6 +89,7 @@ ALL_MODULES=(
 # Module dependencies (module:dependency1,dependency2,...)
 declare -A MODULE_DEPS=(
     ["base-system"]=""
+    ["dns"]="base-system"
     ["firewall"]="base-system"
     ["users"]="base-system"
     ["nginx"]="base-system,firewall"
