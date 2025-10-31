@@ -72,8 +72,8 @@ clean-keep-packages: ## Remove configs/data but keep installed packages
 status: ## Show status of all services
 	@echo "$(BLUE)Service Status:$(NC)"
 	@echo ""
-	@echo -n "Jenkins:          "
-	@systemctl is-active jenkins 2>/dev/null && echo "$(GREEN)active$(NC)" || echo "$(RED)inactive$(NC)"
+	@echo -n "TeamCity:         "
+	@docker ps --filter "name=teamcity-server" --format "{{.Status}}" | grep -q "Up" && echo "$(GREEN)active$(NC)" || echo "$(RED)inactive$(NC)"
 	@echo -n "Nginx:            "
 	@systemctl is-active nginx 2>/dev/null && echo "$(GREEN)active$(NC)" || echo "$(RED)inactive$(NC)"
 	@echo -n "Netdata:          "
@@ -85,7 +85,7 @@ status: ## Show status of all services
 	@echo ""
 	@echo "$(BLUE)Endpoints:$(NC)"
 	@echo "  • Main Site:      http://core.mohjave.com"
-	@echo "  • Jenkins:        http://jenkins.core.mohjave.com"
+	@echo "  • TeamCity:       https://teamcity.core.mohjave.com"
 	@echo "  • Artifacts:      http://artifacts.core.mohjave.com"
 	@echo "  • Monitoring:     http://monitoring.core.mohjave.com"
 	@echo ""
@@ -94,7 +94,7 @@ check: ## Check if deployment is working correctly
 	@echo "$(BLUE)Checking deployment health...$(NC)"
 	@echo ""
 	@FAILED=0; \
-	for dir in /opt/core-setup /srv/data /var/lib/jenkins; do \
+	for dir in /opt/core-setup /srv/data /srv/data/teamcity; do \
 		if [ -d "$$dir" ]; then \
 			echo "$(GREEN)✓$(NC) $$dir exists"; \
 		else \
@@ -103,7 +103,7 @@ check: ## Check if deployment is working correctly
 		fi; \
 	done; \
 	echo ""; \
-	for svc in jenkins nginx netdata artifact-upload fail2ban; do \
+	for svc in nginx netdata artifact-upload fail2ban; do \
 		if systemctl is-active --quiet $$svc 2>/dev/null; then \
 			echo "$(GREEN)✓$(NC) $$svc is running"; \
 		else \
@@ -177,19 +177,22 @@ shellcheck: ## Run shellcheck on all scripts (requires shellcheck installed)
 
 start: ## Start all services
 	@echo "$(BLUE)Starting services...$(NC)"
-	@sudo systemctl start jenkins nginx netdata artifact-upload fail2ban 2>/dev/null || true
+	@sudo docker start teamcity-server teamcity-agent-1 2>/dev/null || true
+	@sudo systemctl start nginx netdata artifact-upload fail2ban 2>/dev/null || true
 	@echo "$(GREEN)Services started!$(NC)"
 	@make status
 
 stop: ## Stop all services
 	@echo "$(BLUE)Stopping services...$(NC)"
-	@sudo systemctl stop jenkins nginx netdata artifact-upload fail2ban 2>/dev/null || true
+	@sudo docker stop teamcity-server teamcity-agent-1 2>/dev/null || true
+	@sudo systemctl stop nginx netdata artifact-upload fail2ban 2>/dev/null || true
 	@echo "$(GREEN)Services stopped!$(NC)"
 	@make status
 
 restart: ## Restart all services
 	@echo "$(BLUE)Restarting services...$(NC)"
-	@sudo systemctl restart jenkins nginx netdata artifact-upload fail2ban 2>/dev/null || true
+	@sudo docker restart teamcity-server teamcity-agent-1 2>/dev/null || true
+	@sudo systemctl restart nginx netdata artifact-upload fail2ban 2>/dev/null || true
 	@echo "$(GREEN)Services restarted!$(NC)"
 	@make status
 
@@ -213,7 +216,7 @@ info: ## Show deployment information
 	@echo "$(GREEN)Location:$(NC)      $(DEPLOYMENT_DIR)"
 	@echo ""
 	@echo "$(BLUE)Services:$(NC)"
-	@echo "  • Jenkins CI/CD"
+	@echo "  • TeamCity CI/CD"
 	@echo "  • Nginx Reverse Proxy"
 	@echo "  • Netdata Monitoring"
 	@echo "  • Artifact Storage"
@@ -223,7 +226,7 @@ info: ## Show deployment information
 	@echo "  • 80    - HTTP"
 	@echo "  • 443   - HTTPS"
 	@echo "  • 4926  - SSH"
-	@echo "  • 8080  - Jenkins"
+	@echo "  • 8111  - TeamCity"
 	@echo "  • 81    - Nginx Admin"
 	@echo ""
 	@echo "$(BLUE)Quick Start:$(NC)"

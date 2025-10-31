@@ -17,7 +17,7 @@ make deploy
 ```
 
 This will install and configure:
-- Jenkins CI/CD Server
+- TeamCity CI/CD Server
 - Nginx Reverse Proxy
 - Netdata Monitoring
 - Artifact Storage
@@ -34,7 +34,7 @@ Shows running services and available endpoints.
 ### 3. Access Your Services
 
 - **Main Site**: http://core.mohjave.com (requires authentication)
-- **Jenkins**: http://jenkins.core.mohjave.com
+- **TeamCity**: https://teamcity.core.mohjave.com
 - **Artifacts**: http://artifacts.core.mohjave.com (public access)
 - **Monitoring**: http://monitoring.core.mohjave.com (requires authentication)
 
@@ -172,7 +172,7 @@ Your router should forward these ports:
 - `4926` → 22 (SSH with rate limiting)
 - `80` → 80 (HTTP)
 - `443` → 443 (HTTPS)
-- `8080` → 8080 (Jenkins)
+- `8111` → 8111 (TeamCity)
 - `81` → 81 (Nginx Admin)
 
 ## Security
@@ -185,7 +185,7 @@ Your router should forward these ports:
 ## What Gets Deployed?
 
 ### Services
-- **Jenkins** - CI/CD automation server
+- **TeamCity** - CI/CD automation server
 - **Nginx** - Reverse proxy for all services
 - **Netdata** - Real-time monitoring dashboard
 - **Artifact Storage** - Store build artifacts (ISO, JAR, NPM, Docker, etc.)
@@ -195,7 +195,7 @@ Your router should forward these ports:
 - `/opt/core-setup/` - Deployment files and configs
 - `/srv/data/artifacts/` - Artifact storage
 - `/srv/backups/` - System backups
-- `/var/lib/jenkins/` - Jenkins workspace
+- `/srv/data/teamcity/` - TeamCity data and workspace
 
 ### Security
 - UFW firewall rules
@@ -395,7 +395,7 @@ make validate
 
 After deployment:
 
-1. Access Jenkins and set up your first job
+1. Access TeamCity and set up your first project
 2. Configure Netdata alerts
 3. Set up artifact retention policies
 4. Configure SSL certificates (if desired)

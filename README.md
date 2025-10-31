@@ -4,7 +4,7 @@ Complete deployment system for a home CI/CD server with automated testing.
 
 ## Features
 
-- **Jenkins** - CI/CD automation server
+- **TeamCity** - CI/CD automation server
 - **Nginx** - Reverse proxy with authentication
 - **Netdata** - Real-time monitoring dashboard
 - **Artifact Storage** - Store build artifacts (ISO, JAR, NPM, Docker, etc.)
@@ -71,14 +71,14 @@ The deployment creates:
 - `/opt/core-setup/` - Deployment files and configs
 - `/srv/data/artifacts/` - Artifact storage
 - `/srv/backups/` - System backups
-- `/var/lib/jenkins/` - Jenkins workspace
+- `/srv/data/teamcity/` - TeamCity data and workspace
 
 ## Endpoints
 
 After deployment:
 
 - **Main Site**: http://core.mohjave.com (requires auth)
-- **Jenkins**: http://jenkins.core.mohjave.com
+- **TeamCity**: https://teamcity.core.mohjave.com
 - **Artifacts**: http://artifacts.core.mohjave.com (public)
 - **Monitoring**: http://monitoring.core.mohjave.com (requires auth)
 
@@ -128,7 +128,7 @@ Router should forward:
 - `4926` → 22 (SSH)
 - `80` → 80 (HTTP)
 - `443` → 443 (HTTPS)
-- `8080` → 8080 (Jenkins)
+- `8111` → 8111 (TeamCity)
 - `81` → 81 (Nginx Admin)
 
 ## Documentation
