@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  teamcity-server:
+    image: jetbrains/teamcity-server:latest
+    container_name: teamcity-server
+    restart: unless-stopped
+    ports:
+      - "8111:8111"
+    volumes:
+      - /srv/data/teamcity/data:/data/teamcity_server/datadir
+      - /srv/data/teamcity/logs:/opt/teamcity/logs
+    environment:
+      - TEAMCITY_SERVER_MEM_OPTS=-Xmx2g -XX:MaxPermSize=270m -XX:ReservedCodeCacheSize=350m
+    networks:
+      - teamcity
+
+  teamcity-agent-1:
+    image: teamcity-agent-python:latest
+    container_name: teamcity-agent-1
+    restart: unless-stopped
+    privileged: true
+    group_add:
+      - "984"  # Host docker group GID for socket access
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /srv/data/teamcity/agent1:/data/teamcity_agent/conf
+    environment:
+      - SERVER_URL=http://teamcity-server:8111
+      - AGENT_NAME=docker-agent-1
+    depends_on:
+      - teamcity-server
+    networks:
+      - teamcity
+
+  teamcity-agent-2:
+    image: teamcity-agent-python:latest
+    container_name: teamcity-agent-2
+    restart: unless-stopped
+    privileged: true
+    group_add:
+      - "984"  # Host docker group GID for socket access
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /srv/data/teamcity/agent2:/data/teamcity_agent/conf
+    environment:
+      - SERVER_URL=http://teamcity-server:8111
+      - AGENT_NAME=docker-agent-2
+    depends_on:
+      - teamcity-server
+    networks:
+      - teamcity
+
+  teamcity-agent-3:
+    image: teamcity-agent-python:latest
+    container_name: teamcity-agent-3
+    restart: unless-stopped
+    privileged: true
+    group_add:
+      - "984"  # Host docker group GID for socket access
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /srv/data/teamcity/agent3:/data/teamcity_agent/conf
+    environment:
+      - SERVER_URL=http://teamcity-server:8111
+      - AGENT_NAME=docker-agent-3
+    depends_on:
+      - teamcity-server
+    networks:
+      - teamcity
+
+networks:
+  teamcity:
+    driver: bridge

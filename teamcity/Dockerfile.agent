@@ -1,0 +1,22 @@
+FROM jetbrains/teamcity-agent:latest
+
+# Install pip and other common Python tools
+USER root
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    python3-pip \
+    python3-dev \
+    build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and install teamcity-messages globally
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install teamcity-messages
+
+# Switch back to buildagent user
+USER buildagent
+
+# Verify installation
+RUN python3 -m pip --version && \
+    python3 -c "import teamcity.messages; print('teamcity-messages installed successfully')"

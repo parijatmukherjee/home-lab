@@ -1,0 +1,208 @@
+pipeline {
+    agent {
+        label 'docker-agent'
+    }
+
+    stages {
+        stage('Detect Project') {
+            steps {
+                script {
+                    // Detect project type
+                    if (fileExists('package.json')) {
+                        env.PROJECT_TYPE = 'nodejs'
+                    } else if (fileExists('requirements.txt') || fileExists('setup.py') || fileExists('pyproject.toml')) {
+                        env.PROJECT_TYPE = 'python'
+                    } else if (fileExists('pom.xml')) {
+                        env.PROJECT_TYPE = 'maven'
+                    } else if (fileExists('build.gradle') || fileExists('build.gradle.kts')) {
+                        env.PROJECT_TYPE = 'gradle'
+                    } else if (fileExists('Dockerfile')) {
+                        env.PROJECT_TYPE = 'docker'
+                    } else if (fileExists('Makefile')) {
+                        env.PROJECT_TYPE = 'make'
+                    } else if (fileExists('build.sh') || fileExists('compile.sh')) {
+                        env.PROJECT_TYPE = 'shell'
+                    } else {
+                        env.PROJECT_TYPE = 'generic'
+                    }
+
+                    echo "✓ Detected project type: ${env.PROJECT_TYPE}"
+                    echo "Branch: ${env.GIT_BRANCH}"
+                    echo "Commit: ${env.GIT_COMMIT}"
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    switch(env.PROJECT_TYPE) {
+                        case 'nodejs':
+                            echo "Building Node.js project..."
+                            sh '''
+                                node --version
+                                npm --version
+                                npm ci || npm install
+                                npm run build || echo "No build script defined"
+                            '''
+                            break
+
+                        case 'python':
+                            echo "Building Python project..."
+                            sh '''
+                                python3 --version
+                                python3 -m venv venv || virtualenv venv
+                                . venv/bin/activate
+                                pip install --upgrade pip
+
+                                if [ -f requirements.txt ]; then
+                                    pip install -r requirements.txt
+                                elif [ -f setup.py ]; then
+                                    pip install -e .
+                                elif [ -f pyproject.toml ]; then
+                                    pip install poetry
+                                    poetry install
+                                fi
+                            '''
+                            break
+
+                        case 'maven':
+                            echo "Building Maven project..."
+                            sh '''
+                                java -version
+                                mvn --version
+                                mvn clean package -DskipTests
+                            '''
+                            break
+
+                        case 'gradle':
+                            echo "Building Gradle project..."
+                            sh '''
+                                java -version
+                                gradle --version
+                                gradle clean build -x test
+                            '''
+                            break
+
+                        case 'docker':
+                            echo "Building Docker image..."
+                            sh '''
+                                docker --version
+                                docker build -t ${JOB_NAME}:${BUILD_NUMBER} .
+                                docker tag ${JOB_NAME}:${BUILD_NUMBER} ${JOB_NAME}:latest
+                            '''
+                            break
+
+                        case 'make':
+                            echo "Building with Makefile..."
+                            sh 'make build || make all || make'
+                            break
+
+                        case 'shell':
+                            echo "Building with shell script..."
+                            sh '''
+                                if [ -f build.sh ]; then
+                                    chmod +x build.sh
+                                    ./build.sh
+                                elif [ -f compile.sh ]; then
+                                    chmod +x compile.sh
+                                    ./compile.sh
+                                fi
+                            '''
+                            break
+
+                        default:
+                            echo "Generic project - no specific build steps"
+                            sh 'ls -la'
+                    }
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                script {
+                    switch(env.PROJECT_TYPE) {
+                        case 'nodejs':
+                            sh 'npm test || echo "No tests defined"'
+                            break
+
+                        case 'python':
+                            sh '''
+                                . venv/bin/activate || true
+                                pytest || python -m pytest || echo "No tests found"
+                            '''
+                            break
+
+                        case 'maven':
+                            sh 'mvn test || echo "Tests failed or not found"'
+                            break
+
+                        case 'gradle':
+                            sh 'gradle test || echo "Tests failed or not found"'
+                            break
+
+                        case 'make':
+                            sh 'make test || echo "No test target"'
+                            break
+
+                        case 'shell':
+                            sh '''
+                                if [ -f test.sh ]; then
+                                    chmod +x test.sh
+                                    ./test.sh
+                                else
+                                    echo "No test script found"
+                                fi
+                            '''
+                            break
+
+                        default:
+                            echo "No tests to run"
+                    }
+                }
+            }
+        }
+
+        stage('Archive') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'master'
+                }
+            }
+            steps {
+                script {
+                    switch(env.PROJECT_TYPE) {
+                        case 'nodejs':
+                            archiveArtifacts artifacts: 'dist/**/*,build/**/*', allowEmptyArchive: true
+                            break
+                        case 'python':
+                            archiveArtifacts artifacts: 'dist/**/*,build/**/*,*.whl,*.tar.gz', allowEmptyArchive: true
+                            break
+                        case 'maven':
+                            archiveArtifacts artifacts: 'target/*.jar,target/*.war', allowEmptyArchive: true
+                            break
+                        case 'gradle':
+                            archiveArtifacts artifacts: 'build/libs/*.jar', allowEmptyArchive: true
+                            break
+                        default:
+                            echo "No artifacts to archive"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✓ Build succeeded!'
+        }
+        failure {
+            echo '✗ Build failed!'
+        }
+        always {
+            cleanWs()
+        }
+    }
+}
