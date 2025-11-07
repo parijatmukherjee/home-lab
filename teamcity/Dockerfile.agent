@@ -14,9 +14,15 @@ RUN apt-get update && \
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install teamcity-messages
 
+# Create docker-compose wrapper for backward compatibility
+# The agent has Docker Compose v2 (docker compose) but many projects use docker-compose
+RUN echo '#!/bin/sh\nexec docker compose "$@"' > /usr/local/bin/docker-compose && \
+    chmod +x /usr/local/bin/docker-compose
+
 # Switch back to buildagent user
 USER buildagent
 
 # Verify installation
 RUN python3 -m pip --version && \
-    python3 -c "import teamcity.messages; print('teamcity-messages installed successfully')"
+    python3 -c "import teamcity.messages; print('teamcity-messages installed successfully')" && \
+    docker-compose version
