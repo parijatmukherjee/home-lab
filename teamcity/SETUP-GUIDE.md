@@ -288,6 +288,11 @@ Before running builds that upload artifacts, ensure the directory exists with pr
 
 ```bash
 cd /home/parijat/workspace/home-lab/teamcity
+
+# First time setup OR when docker-compose.yml changes (like new volume mounts)
+./scripts/fix-agent-permissions.sh --recreate
+
+# For permission fixes only (faster, doesn't restart TeamCity server)
 ./scripts/fix-agent-permissions.sh
 ```
 
@@ -295,7 +300,12 @@ This script will:
 - Create `/srv/data/artifacts` and subdirectories
 - Set ownership to buildagent user (UID 1000)
 - Set proper permissions (755 for web access)
-- Restart all agents to apply changes
+- Restart or recreate agents to apply changes
+
+**Important:**
+- Use `--recreate` flag when you've modified `docker-compose.yml` (e.g., added volume mounts)
+- Use without flags for quick permission fixes (doesn't interrupt TeamCity server)
+- **Only agents are restarted/recreated** - TeamCity server stays running!
 
 ### Manual Setup (Alternative)
 
@@ -311,9 +321,12 @@ sudo chown -R 1000:1000 /srv/data/artifacts
 # Set permissions (755 allows web server to read)
 sudo chmod -R 755 /srv/data/artifacts
 
-# Restart agents
-docker restart teamcity-agent-1 teamcity-agent-2 teamcity-agent-3
+# Recreate agents (to pick up volume mounts) - only agents, NOT server
+cd /home/parijat/workspace/home-lab/teamcity
+docker compose up -d --force-recreate teamcity-agent-1 teamcity-agent-2 teamcity-agent-3
 ```
+
+**Note:** Always specify agent names when using `docker compose` to avoid restarting the TeamCity server!
 
 ### Uploading Artifacts from Build Scripts
 
@@ -366,6 +379,35 @@ docker exec teamcity-agent-1 rm /srv/data/artifacts/test.txt
 
 ## 🆘 Troubleshooting
 
+### Agent vs Server Restarts - Important!
+
+**⚠️ CRITICAL:** When working with agents, NEVER restart the entire docker-compose stack unnecessarily!
+
+**❌ BAD - Restarts everything including server:**
+```bash
+docker compose restart              # Restarts ALL services
+docker compose up -d --force-recreate  # Recreates ALL containers
+```
+
+**✅ GOOD - Only affects agents:**
+```bash
+# Quick restart (for permission fixes)
+docker restart teamcity-agent-1 teamcity-agent-2 teamcity-agent-3
+
+# Recreate agents (for docker-compose.yml changes)
+docker compose up -d --force-recreate teamcity-agent-1 teamcity-agent-2 teamcity-agent-3
+
+# Or use the helper script
+./scripts/fix-agent-permissions.sh            # Quick restart
+./scripts/fix-agent-permissions.sh --recreate # Recreate agents
+```
+
+**Why this matters:**
+- ❌ Restarting TeamCity server interrupts running builds
+- ❌ Server takes 1-2 minutes to start
+- ❌ Agents disconnect during server restart
+- ✅ Restarting only agents is instant and doesn't affect builds on other agents
+
 ### Agent Not Connecting? (Permission Denied Errors)
 
 If the agent shows "permission denied" errors or keeps restarting:
@@ -374,15 +416,15 @@ If the agent shows "permission denied" errors or keeps restarting:
 
 **Fix:**
 ```bash
-# Fix agent directory permissions (agent runs as UID 1000)
-sudo chown -R 1000:1000 /srv/data/teamcity/agent
-sudo docker restart teamcity-agent-1
+cd /home/parijat/workspace/home-lab/teamcity
+./scripts/fix-agent-permissions.sh  # Quick fix, only restarts agents
 ```
 
-Or use the helper script:
+Or manually:
 ```bash
-cd /home/parijat/workspace/home-lab/teamcity
-./scripts/fix-agent-permissions.sh
+# Fix agent directory permissions (agent runs as UID 1000)
+sudo chown -R 1000:1000 /srv/data/teamcity/agent*
+docker restart teamcity-agent-1 teamcity-agent-2 teamcity-agent-3
 ```
 
 ### Agent Shows "Incompatible runner: Docker Compose"
