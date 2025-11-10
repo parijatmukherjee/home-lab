@@ -265,6 +265,105 @@ OR manually:
    - Fail if tests take too long
    - Custom failure conditions
 
+## 📦 Artifact Storage Setup
+
+TeamCity agents are configured to upload build artifacts (ISOs, JARs, etc.) to `/srv/data/artifacts`, which is mounted from the host and served at **https://artifacts.core.mohjave.com**.
+
+### Directory Structure
+
+The artifacts directory is organized by artifact type:
+```
+/srv/data/artifacts/
+├── iso/          # ISO images
+├── jar/          # Java artifacts
+├── npm/          # NPM packages
+├── python/       # Python wheels
+├── docker/       # Docker tarballs
+└── generic/      # Other artifacts
+```
+
+### Initial Setup
+
+Before running builds that upload artifacts, ensure the directory exists with proper permissions:
+
+```bash
+cd /home/parijat/workspace/home-lab/teamcity
+./scripts/fix-agent-permissions.sh
+```
+
+This script will:
+- Create `/srv/data/artifacts` and subdirectories
+- Set ownership to buildagent user (UID 1000)
+- Set proper permissions (755 for web access)
+- Restart all agents to apply changes
+
+### Manual Setup (Alternative)
+
+If you prefer to set up manually:
+
+```bash
+# Create artifacts directory structure
+sudo mkdir -p /srv/data/artifacts/{iso,jar,npm,python,docker,generic}
+
+# Set ownership (buildagent UID is 1000)
+sudo chown -R 1000:1000 /srv/data/artifacts
+
+# Set permissions (755 allows web server to read)
+sudo chmod -R 755 /srv/data/artifacts
+
+# Restart agents
+docker restart teamcity-agent-1 teamcity-agent-2 teamcity-agent-3
+```
+
+### Uploading Artifacts from Build Scripts
+
+In your build scripts, you can now write directly to `/srv/data/artifacts`:
+
+```bash
+# Example: Upload ISO after build
+cp myproject.iso /srv/data/artifacts/iso/
+
+# Example: Upload with version structure
+VERSION="1.0.0"
+mkdir -p /srv/data/artifacts/iso/myproject/${VERSION}
+cp myproject.iso /srv/data/artifacts/iso/myproject/${VERSION}/
+```
+
+### Accessing Artifacts
+
+Artifacts are publicly accessible at:
+```
+https://artifacts.core.mohjave.com/iso/myproject/1.0.0/myproject.iso
+```
+
+### Troubleshooting Artifact Uploads
+
+**Error: "Target directory does not exist"**
+```bash
+# Run the permissions fix script
+./scripts/fix-agent-permissions.sh
+```
+
+**Error: "Permission denied" when writing to artifacts**
+```bash
+# Verify ownership
+ls -la /srv/data/artifacts
+
+# Should show: drwxr-xr-x 1000 1000 ...
+
+# Fix if needed
+sudo chown -R 1000:1000 /srv/data/artifacts
+sudo chmod -R 755 /srv/data/artifacts
+```
+
+**Verify agent can write to artifacts directory**
+```bash
+# Test from inside agent container
+docker exec teamcity-agent-1 touch /srv/data/artifacts/test.txt
+docker exec teamcity-agent-1 ls -la /srv/data/artifacts/test.txt
+docker exec teamcity-agent-1 rm /srv/data/artifacts/test.txt
+```
+
 ## 🆘 Troubleshooting
 
 ### Agent Not Connecting? (Permission Denied Errors)

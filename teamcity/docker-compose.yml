@@ -25,6 +25,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /srv/data/teamcity/agent1:/data/teamcity_agent/conf
+      - /srv/data/artifacts:/srv/data/artifacts
     environment:
       - SERVER_URL=http://teamcity-server:8111
       - AGENT_NAME=docker-agent-1
@@ -43,6 +44,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /srv/data/teamcity/agent2:/data/teamcity_agent/conf
+      - /srv/data/artifacts:/srv/data/artifacts
     environment:
       - SERVER_URL=http://teamcity-server:8111
       - AGENT_NAME=docker-agent-2
@@ -61,6 +63,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /srv/data/teamcity/agent3:/data/teamcity_agent/conf
+      - /srv/data/artifacts:/srv/data/artifacts
     environment:
       - SERVER_URL=http://teamcity-server:8111
       - AGENT_NAME=docker-agent-3
